@@ -1,0 +1,340 @@
+openapi: 3.0.1
+info:
+  title: API FLASK
+  description: API responsável por integrar cursos e formações e professores
+  version: 1.0.0
+  contact:
+    name: Eudes Pessoa
+    url: https://www.linkedin.com/in/eudes-pessoa-307157259/
+    email: contato@email.com
+servers:
+  - url: http://localhost:5000
+
+tags:
+  - name: Auth
+    description: User authentication
+  - name: Cursos
+    description: CRUD in database Courses
+
+paths:
+
+  /login:
+    post:
+      tags:
+        - Auth
+      operationId: login
+      description: Realizar login do usuário com as credenciais
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+
+      responses:
+        "200":
+          description: 'Login foi realizado com sucesso'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "400":
+          description: 'Houve erros de validação'
+          content:
+            'application/json':
+             schema:
+               $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: 'Credenciais estão invalidas'
+          content:
+            'application/json':
+             schema:
+               $ref: '#/components/schemas/ErrorResponse'
+
+  /token/refresh:
+    post:
+      tags:
+        - Auth
+      operationId: refresh
+      description: Autenticar o usuáriio atraves do refresh token
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "200":
+          description: 'Autenticação realizada com sucesso'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  /cursos:
+    post:
+      tags:
+        - Cursos
+      operationId: cadastrarCurso
+      description: Cadastrar Curso
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CursoRequest'
+      responses:
+        '201' :
+          description: 'Curso cadastrado com sucesso'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/CursoResponse'
+        '400' :
+          description: 'Houve erros de validação'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403' :
+          description: 'Recurso disponível apenas para administradores'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404' :
+          description: 'Formação não foi encontrada'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Cursos
+      operationId: listarCursos
+      description: Listar todos os Cursos
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: 'Listagem de Cursos Realizado com Sucesso'
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoResponse'
+        '401':
+          description: 'Usuário não está autorizado'
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+
+  /cursos/{cursoId}:
+    get:
+      tags:
+        - Cursos
+      operationId: detalharCurso
+      description: 'Detalhar curso por ID'
+      parameters:
+      - in: path
+        name: cursoId
+        description: Id do curso a ser detalhado
+        required: True
+        schema:
+          type: integer
+      security:
+        - JWT: []
+      responses:
+        '200':
+          description: 'Curso detalhado com sucesso'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/CursoResponse"
+        '401':
+          description: 'Usuário não autenticado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: 'Curso não foi encontrado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags:
+        - Cursos
+      description: 'Atualizar Cursos'
+      operationId: atualizarCurso
+      parameters:
+      - in: path
+        name: cursoId
+        description: Id do curso a ser atualizado
+        required: True
+        schema:
+          type: integer
+      security:
+        - JWT: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/CursoRequest'
+      responses:
+        '200':
+          description: 'Curso atualizado com sucesso'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/CursoResponse"
+        '400':
+          description: 'Houve erros na validação dos dados'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '401':
+          description: 'Usuário não autenticado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: 'Curso não foi encontrado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - Cursos
+      description: 'Excluir Cursos'
+      operationId: excluirCurso
+      parameters:
+      - in: path
+        name: cursoId
+        description: Id do curso a ser removido
+        required: True
+        schema:
+          type: integer
+      security:
+        - JWT: []
+      responses:
+        '204':
+          description: 'Curso excluído com sucesso'
+        '401':
+          description: 'Usuário não autenticado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: 'Curso não foi encontrado'
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+components:
+  schemas:
+
+    LoginRequest:
+       type: object
+       required:
+         - email
+         - senha
+       properties:
+         email:
+           type: string
+           format: email
+         senha:
+           type: string
+           format: password
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+
+    CursoRequest:
+      type: object
+      required:
+        - nome
+        - descricao
+        - data_publicacao
+        - formacao
+      properties:
+        nome:
+          type: string
+          maxLength: 50
+        descricao:
+          type: string
+          maxLength: 100
+        data_publicacao:
+          type: string
+          format: date
+        formacao:
+          type: string
+
+    CursoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        descricao:
+          type: string
+        data_publicacao:
+          type: string
+          format: date
+        formacao:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkResponse"
+
+    LinkResponse:
+      type: object
+      properties:
+        get:
+          type: string
+        put:
+          type: string
+        delete:
+          type: string
+
+
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+    api_key:
+      type: apiKey
+      in: header
+      name: api_key
